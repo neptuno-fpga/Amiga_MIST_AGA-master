@@ -93,13 +93,14 @@ set_location_assignment PIN_B21 -to PS2_MDAT
 # TECLADO
 set_location_assignment PIN_N19 -to PS2_CLK
 set_location_assignment PIN_N20 -to PS2_DAT
-
-
-
 #
 # SONIDO
 set_location_assignment PIN_A3 -to AUDIO_L
 set_location_assignment PIN_B4 -to AUDIO_R
+# I2S
+set_location_assignment PIN_M20 -to SCLK
+set_location_assignment PIN_AB14 -to LRCLK
+set_location_assignment PIN_AA15 -to SDIN
 #
 # JOYS
 set_location_assignment PIN_A20 -to JOY_CLK
@@ -107,12 +108,12 @@ set_location_assignment PIN_B20 -to JOY_LOAD
 set_location_assignment PIN_B19 -to JOY_DATA
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to JOY_DATA
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to JOY_DATA
-set_location_assignment PIN_AA18 -to JOY_X_P7
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to JOY_X_P7
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to JOY_X_P7
+#set_location_assignment PIN_AA18 -to JOY_X_P7
+#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to JOY_X_P7
+#set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to JOY_X_P7
 #
-#set_location_assignment PIN_M7 -to UART_RXD
-#set_location_assignment PIN_M8 -to UART_TXD
+set_location_assignment PIN_AB20 -to UART_RXD
+set_location_assignment PIN_AB16 -to UART_TXD
 #
 set_location_assignment PIN_B1 -to VGA_R[0]
 set_location_assignment PIN_C1 -to VGA_R[1]
@@ -307,9 +308,10 @@ set_global_assignment -name PARTITION_COLOR 2147039 -section_id Top
 
 # el modulo TOP principal SIEMPRE debei ir encima, para las variables globales tipo "define"
 #
+set_global_assignment -name VERILOG_FILE ../../rtl/soc/joydecoder_np1.v
+set_global_assignment -name VHDL_FILE ../../rtl/soc/audio_i2s.vhd
 set_global_assignment -name VERILOG_FILE ../../rtl/soc/Cyclone4_MIST_AGA_top.v
 set_global_assignment -name SDC_FILE Constraints.sdc
-set_global_assignment -name VERILOG_FILE ../../rtl/soc/joydecoder_neptuno.v
 set_global_assignment -name VERILOG_FILE ../../rtl/indicators/indicators.v
 set_global_assignment -name VERILOG_FILE ../../rtl/ctrl/qmem_decoder.v
 set_global_assignment -name VERILOG_FILE ../../rtl/ctrl/qmem_bus.v

@@ -63,7 +63,15 @@ module Cyclone4_MIST_AGA_top (
   output                SDRAM_CKE,     // SDRAM Clock Enable
   //STM32
   output wire	         STM_RST_O = 1'b0,  //'0' to hold the microcontroller reset line, to free the SD card  
-`ifndef ARANANET  
+  // UART
+  output                UART_TXD,     // UART Transmitter
+  input                 UART_RXD,     // UART Receiver  
+  // i2s (common)
+  output						SCLK,
+  output						LRCLK,  
+  output						SDIN,
+  
+  `ifndef ARANANET  
   // LED outputs
   output                LED,         // 2 led (azul-naranja) en nuestra boina, y uno (rojo) en plana fpga
   // MANDOS
@@ -82,14 +90,8 @@ module Cyclone4_MIST_AGA_top (
   input wire     [6:0]  joy2,
   // BUZZER
   output						BUZZER,		  // Salida para Altavoz
-  // UART
-  output                UART_TXD,     // UART Transmitter
-  input                 UART_RXD,     // UART Receiver
   // SONIDO I2S
-  output						SCLK,
-  output						LRCLK,
-  output						MCLK,
-  output						SDIN
+  output						MCLK
 `endif
 );
 
@@ -122,8 +124,8 @@ wire           rst_minimig;
 wire           rst_cpu;
 
 `ifndef ARANANET  
-wire  UART_TXD;     // UART Transmitter
-wire  UART_RXD;     // UART Receiver
+//wire  UART_TXD;     // UART Transmitter
+//wire  UART_RXD;     // UART Receiver
 wire  BUZZER;       // BUZZER PIEZOELECTRICO
 `endif
 
@@ -362,41 +364,38 @@ wire joy2right;
 wire joy2fire1;
 wire joy2fire2;
 
+// Llamamos a la instancia de los Joysticks 
+	  
+joydecoder joystick_serial  (
+    .clk          ( clk_28 ), 	
+    .joy_data     ( JOY_DATA ),
+    .joy_clk      ( JOY_CLK ),
+    .joy_load     ( JOY_LOAD ),
+	 .clock_locked ( pll_locked ), 
+    .joy1up       ( joy1up ),
+    .joy1down     ( joy1down ),
+    .joy1left     ( joy1left ),
+    .joy1right    ( joy1right ),
+    .joy1fire1    ( joy1fire1 ),
+    .joy1fire2    ( joy1fire2 ),
 
-// Llamamos a la instancia de los Joysticks
-
-	joydecoder los_joysticks (
-      .clk(clk_28),
-      .joy_data(JOY_DATA),
-      .joy_clk(JOY_CLK),
-      .joy_load_n(JOY_LOAD),
-      .joy1up(joy1up),
-      .joy1down(joy1down),
-      .joy1left(joy1left),
-      .joy1right(joy1right),
-      .joy1fire1(joy1fire1),
-      .joy1fire2(joy1fire2),
-      .joy2up(joy2up),
-      .joy2down(joy2down),
-      .joy2left(joy2left),
-      .joy2right(joy2right),
-      .joy2fire1(joy2fire1),
-      .joy2fire2(joy2fire2)
-   );		  
+    .joy2up       ( joy2up ),
+    .joy2down     ( joy2down ),
+    .joy2left     ( joy2left ),
+    .joy2right    ( joy2right ),
+    .joy2fire1    ( joy2fire1 ),
+    .joy2fire2    ( joy2fire2 )
+); 
+	  	  
 	  
+//assign joy2 = {2'b00, ~joy1fire2, ~joy1fire1, ~joy1up, ~joy1down, ~joy1left, ~joy1right};	  
+//assign joy1 = {2'b00, ~joy2fire2, ~joy2fire1, ~joy2up, ~joy2down, ~joy2left, ~joy2right};	  
 
 
-	  
-// ¿joysticks cambiados?
-assign joy2 = {2'b00, ~joy1fire2, ~joy1fire1, ~joy1up, ~joy1down, ~joy1left, ~joy1right};	  
-assign joy1 = {2'b00, ~joy2fire2, ~joy2fire1, ~joy2up, ~joy2down, ~joy2left, ~joy2right};	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
+assign joy2 = {2'b00, joy1fire2, joy1fire1, joy1up, joy1down, joy1left, joy1right};	  
+assign joy1 = {2'b00, joy2fire2, joy2fire1, joy2up, joy2down, joy2left, joy2right};	  
+
+
 	  
 	  
 `endif
@@ -719,6 +718,22 @@ minimig minimig (
 assign VGA_R = VGA_R8[7:2] ; // me quedo con los 6 bits altos
 assign VGA_G = VGA_G8[7:2] ; // para llegar a los de 
 assign VGA_B = VGA_B8[7:2] ; // nuestra placa
+
+//i2s audio
+
+wire MCLK;
+
+audio_i2s i2s
+(
+	.clk_50MHz(CLOCK_50),
+	.dac_MCLK (MCLK),
+	.dac_LRCK (LRCLK),
+	.dac_SCLK (SCLK),
+	.dac_SDIN (SDIN),
+	.L_data   ({~AUDIO_L_DATA[14], AUDIO_L_DATA[13:0]}),
+	.R_data   ({~AUDIO_R_DATA[14], AUDIO_R_DATA[13:0]})		
+);
+
 `else
 assign VGA_R     = VGA_R8; // me quedo con los 6 bits altos
 assign VGA_G     = VGA_G8; // para llegar a los de 
@@ -726,6 +741,7 @@ assign VGA_B     = VGA_B8; // nuestra placa
 assign VGA_CLOCK = clk_28; //clk_28 CLOCK_50 clk_7
 assign VGA_BLANK = VGA_HS && VGA_VS; //_blank; //VGA_HS && VGA_VS;
 assign MCLK = CLOCK_50; //CLOCK_50 o clk_50
+
 
 i2s_audio_out_sin_lpf i2s_audio_out_sin_lpf
 (
